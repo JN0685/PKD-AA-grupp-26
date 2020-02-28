@@ -5,11 +5,14 @@ import Moves
 -}
 main :: IO ()
 main = do
-  putStrLn "Welcome to Chess."
+  putStrLn "Welcome to Chess!"
+  putStrLn "To move a piece type the square the piece is standing on."
   putStrLn "Want to play?"
   choice <- getLine
   if (map toUpper choice) == "YES" then
     turn "White player" newBoard
+  else if (map toUpper choice) == "NO" then
+    return ()
   else
     main
 
@@ -17,22 +20,22 @@ main = do
    Administers the turn
    Returns: the next turn for the other player if there is a valid move. The turn for the same player if the move is invalid. Main if the player quits.
 -}
-turn :: Moves.Contester -> Moves.Board -> IO ()
+turn :: Contester -> Board -> IO ()
 turn player board = do
   printCurrentBoard (convertBoard board)
   putStrLn "Eliminated pieces"
-  print (eliminatedPieces board)
+  putStrLn (convertBoard (eliminatedPieces board))
   putStrLn (player ++ ", choose piece to move")
   input <- getLine
   if (map toUpper input) == "FORFEIT" then
     main
-  else if Moves.convert input == (9, 9) then do
+  else if convert input == (9, 9) then do
     putStrLn "Rockade not available"
     turn player board
-  else if Moves.convert input == (10, 10) then do
+  else if convert input == (10, 10) then do
     putStrLn "Invalid move, try again"
     turn player board
-  else if Moves.onSquare board (Moves.position (Moves.convert input)) == Moves.Empty then do
+  else if onSquare board (position (convert input)) == Empty then do
     putStrLn "You have chosen an empty square, try again"
     turn player board
     else do
@@ -80,18 +83,18 @@ convertBoard (x:xs) = (convertPieces x) ++ (convertBoard xs)
    makes a move of the piece on the position corresponding to (a, b) to (c, d) if the move is valid
    Returns: a board where the move has been made or the same board if the move was invalid
 -}
-makeMove :: Moves.Contester -> Moves.Board -> Moves.Move -> IO ()
+makeMove :: Contester -> Board -> Move -> IO ()
 makeMove player board input = do
   putStrLn "Choose where to move"
   output <- getLine
   if Moves.validMove board player input output then do
-    let currentBoard = Moves.move board (Moves.position (Moves.convert input)) (Moves.position (Moves.convert output))
+    let currentBoard = move board (position (convert input)) (position (convert output))
      in checkWinner (nextPlayer player) currentBoard
   else do
     putStrLn "Invalid move, try again"
     turn player board
 
-checkWinner :: Moves.Contester -> Moves.Board -> IO ()
+checkWinner :: Contester -> Board -> IO ()
 checkWinner player board = do
   if elem (White King) (eliminatedPieces board) then do
     putStrLn "Black player wins!"
@@ -110,7 +113,7 @@ checkWinner player board = do
    Examples: nextPlayer "White player" = "Black player"
              nextPlayer "sdjfg" = error
 -}
-nextPlayer :: Moves.Contester -> Contester
+nextPlayer :: Contester -> Contester
 nextPlayer "White player" = "Black player"
 nextPlayer "Black player" = "White player"
 
@@ -118,10 +121,13 @@ nextPlayer "Black player" = "White player"
    List all the Pieces that has been eliminated
    Returns: A Board of the eliminated Pieces
    Example: eliminatedPieces newBoard = []
+            eliminatedPieces [White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Rook, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Queen, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Queen, White King, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black King, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Empty] = [Black Rook]
+            eliminatedPieces [White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Empty, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Queen, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Queen, White King, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black King, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Empty] = [Black Rook,Black Rook]
+            eliminatedPieces [] = [Black Pawn,Black Pawn,Black Pawn,Black Pawn,Black Pawn,Black Pawn,Black Pawn,Black Pawn,Black King,Black Queen,Black Bishop,Black Bishop,Black Knight,Black Knight,Black Rook,Black Rook,White Pawn,White Pawn,White Pawn,White Pawn,White Pawn,White Pawn,White Pawn,White Pawn,White King,White Queen,White Bishop,White Bishop,White Knight,White Knight,White Rook,White Rook]
 -}
-eliminatedPieces :: Moves.Board -> Moves.Board
+eliminatedPieces :: Board -> Board
 eliminatedPieces board = let noEmpty = filter (/=Empty) board
-                                                  in eliminatedPieces_acc [] noEmpty templateEliminatedPieces
+                          in eliminatedPieces_acc [] noEmpty templatePieces
   where
     eliminatedPieces_acc acc noEmpty [] = acc
     eliminatedPieces_acc acc noEmpty ((x, y):xs) | (y - (length (filter (==x) noEmpty))) == 0 = eliminatedPieces_acc acc noEmpty xs
@@ -130,10 +136,16 @@ eliminatedPieces board = let noEmpty = filter (/=Empty) board
 {- newBoard -- This is a function, should be treated as one.
    Creates a new chessboard
    Returns A list of Square where the first element in the list corresponds to A1 on a chess board, the 9th element corresponds to B1 on a chess board and thr 64th element corresponds to H8 on a chess board
+   Examples: newBoard = [White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Rook, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Queen, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Queen, White King, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black King, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Rook]
 -}
 newBoard :: Board
 newBoard = [White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Rook, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Queen, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Queen, White King, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black King, White Bishop, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Bishop, White Knight, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Knight, White Rook, White Pawn, Empty, Empty, Empty, Empty, Black Pawn, Black Rook]
 
-templateEliminatedPieces :: [(Moves.Square, Int)]
-templateEliminatedPieces = [(White Rook, 2), (White Knight, 2), (White Bishop, 2), (White Queen, 1), (White King, 1), (White Pawn, 8), (Black Rook, 2), (Black Knight, 2), (Black Bishop, 2), (Black Queen, 1), (Black King, 1), (Black Pawn, 8)]
+{- templatePieces
+   Creates a template of pieces in a chess game
+   Returns: [(Square, Int)] where Int is the number of Squares in a chess game
+   Example: templatePieces = [(White Rook, 2), (White Knight, 2), (White Bishop, 2), (White Queen, 1), (White King, 1), (White Pawn, 8), (Black Rook, 2), (Black Knight, 2), (Black Bishop, 2), (Black Queen, 1), (Black King, 1), (Black Pawn, 8)]
+-}
+templatePieces :: [(Square, Int)]
+templatePieces = [(White Rook, 2), (White Knight, 2), (White Bishop, 2), (White Queen, 1), (White King, 1), (White Pawn, 8), (Black Rook, 2), (Black Knight, 2), (Black Bishop, 2), (Black Queen, 1), (Black King, 1), (Black Pawn, 8)]
 
