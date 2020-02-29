@@ -12,21 +12,20 @@ type Contester = String
 type Move = String
 
 data Square = Empty | White Piece | Black Piece
-
    deriving (Eq, Show)
-
---data Colour = White | Black
-  -- deriving (Show)
 
 data Piece = Pawn | Knight | Bishop | Rook | Queen | King
    deriving (Eq, Show)
 
 
 {- move b int1 int2
+   -- moves a chess piece from one square to another. 
    moves a piece from the Square corresponding to int1 to the square corresponding to int2 on the board.
-   PRE: move need to be valid
-   RETURNS: a board where the piece on 'int1' has been moved to 'int2'.
+   PRE: move need to be valid          -- not a precondtion?
+   RETURNS: a board where the piece on 'int1' has been moved to 'int2'.  -- + the place 'int1' becomes 'Empty' and the place on 'int2' gets the Square value of wher 'int1' initially was/were. 
    EXAMPLES: move newBoard 1 2 = [White Rook,Empty,White Pawn,Empty,Empty,Empty,Black Pawn,Black Rook,White Knight,White Pawn,Empty,Empty,Empty,Empty,Black Pawn,Black Knight,White Bishop,White Pawn,Empty,Empty,Empty,Empty,Black Pawn,Black Bishop,White Queen,White Pawn,Empty,Empty,Empty,Empty,Black Pawn,Black Queen,White King,White Pawn,Empty,Empty,Empty,Empty,Black Pawn,Black King,White Bishop,White Pawn,Empty,Empty,Empty,Empty,Black Pawn,Black Bishop,White Knight,White Pawn,Empty,Empty,Empty,Empty,Black Pawn,Black Knight,White Rook,White Pawn,Empty,Empty,Empty,Empty,Black Pawn,Black Rook]
+
+++ more examples
 -}
 move :: Board -> Int -> Int -> Board
 move b int1 int2 = let
@@ -35,26 +34,33 @@ move b int1 int2 = let
              in (take int2 removed) ++ ((onSquare b int1) : (drop (int2 + 1) removed))
 
 {- convert i
-   converts an input String into a pair of Int
-   Returns: (9, 9) if i = "Rockard" or (x, y) where x is an Int from 1 to 8 intead of a Char from 'a' to 'h' and y = digitToInt y if x, y are positioner on a chess board. Otherwise (10, 10)
+   converts an input String into a pair of two Int's 
+   Returns: (9, 9) if i = "Rockade" or (x, y) where x is an Int from 1 to 8 intead of a Char from 'a' to 'h' and y = digitToInt y if x, y are positioner on a chess board. Otherwise (10, 10)   --            x is head of i converted to an int                                          y is seconde element of i
    Examples: convert "a1" = (1, 1)
+             convert "h8" == (8, 8)
+             convert "rockade" == (9,9)
+             convert "i9" == (10,10)
+             convert "b6" == (2,6)
 -}
                                                                  
 convert :: String -> (Int, Int)
-convert []       = (10, 10)
-convert (x:[])   = (10, 10)
+convert []       = (10, 10) -- not needed
+convert (x:[])   = (10, 10) -- not needed if convert x = (10,10) is added to the end -- **
 convert (x:y:[]) | (isNumber y) && ((digitToInt y) <= 8) && ((digitToInt y) >= 1) = ((convertAux x), (digitToInt y))
                  | otherwise = (10, 10)
 convert (x:y:ys) | (map toUpper (x:y:ys)) == "ROCKADE" = (9, 9)
                  | otherwise = (10, 10)
+--  **convert x = (10,10)
+
 
 {- convertAux x
    Converts a Char between 'a' and 'h' to an Int between 1 and 8
-   Returns: An Int between 1 and 8 if the Char is between 'a' and 'h' otherwise 10
-   Example: convertAux 'a' = 1
-            convertAux 'A' = 1
-            convertAux 'h' = 8
+   Returns: An Int between 1 and 8 if the Char is between 'a' and 'h' otherwise 10    -- Char should be replaced with x
+   Example: convertAux 'a'  = 1
+            convertAux 'A'  = 1
+            convertAux 'h'  = 8
             convertAux 'hk' = 10
+            convertAux 'i'  = 10
 -}
 convertAux :: Char -> Int
 convertAux x | (toUpper x) == 'A' = 1
@@ -226,7 +232,8 @@ validMoveRook board (a, b) (c, d) | isSameColour (onSquare board (position (a, b
 -- VARIANT: n
 validMoveRookAux :: Board -> Int -> Int -> Int -> Int -> Square -> Bool -- tuple might be best if changed to their index in Board.
 validMoveRookAux b ic 0 ab cd sq = ((onSquare b ab) == Empty) || (isSameColour (onSquare b ab) sq == False) ------ cd not needed
-validMoveRookAux b ic n ab cd sq | abs n > 1 && ((onSquare b (ab+ic)) /= Empty) = False -- change to cd instead of ab? ---- THIS CODE ALWAYS RETURNS FALSE ON FIRST CALL
+validMoveRookAux b ic n ab cd sq | (abs n > 1 && n<0) && ((onSquare b (ab-ic)) /= Empty) = False -- change to cd instead of ab? 
+                                 | (abs n > 1 && n>0) && ((onSquare b (ab+ic)) /= Empty) = False
                                  | n>0       = validMoveRookAux b ic (n-1) (ab+ic) cd sq
                                  | otherwise = validMoveRookAux b ic (n+1) (ab-ic) cd sq -- n-1 changed to n+1
 
