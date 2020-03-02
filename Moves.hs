@@ -185,7 +185,7 @@ validMovePawn board (a, b) (c, d) | (isSameColour (onSquare board (position (a, 
             validMovePawn newBoard (1, 2) (1, 5) = False
 -}
 validMoveWhitePawn :: Board -> (Int, Int) -> (Int, Int) -> Bool
-validMoveWhitePawn board (a, b) (c, d) | a == c && ((d - b == 1) || ((d - b == 2) && b == 2)) = True
+validMoveWhitePawn board (a, b) (c, d) | a == c && ((d - b == 1) || ((d - b == 2) && b == 2)) && (onSquare board (position (c, (d-1))) == Empty) = True
                                        | (abs (a - c)) == 1 && b < d && (onSquare board (position (c, d))) /= Empty = True
                                        | otherwise = False
                                        
@@ -199,7 +199,7 @@ validMoveWhitePawn board (a, b) (c, d) | a == c && ((d - b == 1) || ((d - b == 2
             validMovePawn newBoard (1, 7) (1, 4) = False
 -}
 validMoveBlackPawn :: Board -> (Int, Int) -> (Int, Int) -> Bool
-validMoveBlackPawn board (a, b) (c, d) | a == c && ((b - d == 1) || ((b - d == 2) && b == 7)) = True
+validMoveBlackPawn board (a, b) (c, d) | a == c && ((b - d == 1) || ((b - d == 2) && b == 7)) && (onSquare board (position (c, (d+1))) == Empty) = True
                                        | (abs (a - c)) == 1 && b > d && (onSquare board (position (c, d))) /= Empty = True
                                        | otherwise = False
 
@@ -269,10 +269,11 @@ validMoveBishop board (a, b) (c, d) | (isSameColour (onSquare board (position (a
    Returnes: validMoveBishope board (a, b) (c, d) where (c, d) is an updated output one step closer to the input.
 -}
 validMoveBishopAux :: Board -> (Int, Int) -> (Int, Int) -> Bool
-validMoveBishopAux board (a, b) (c, d) | a > c && b > d = validMoveBishop board (a, b) ((c+1), (d+1))
-                                       | a > c && b < d = validMoveBishop board (a, b) ((c+1), (d-1))
-                                       | a < c && b < d = validMoveBishop board (a, b) ((c-1), (d-1))
-                                       | a < c && b > d = validMoveBishop board (a, b) ((c-1), (d+1))
+validMoveBishopAux board (a, b) (c, d) | a > c && b > d && (onSquare board (position ((c+1), (d+1)))) == Empty = validMoveBishop board (a, b) ((c+1), (d+1))
+                                       | a > c && b < d && (onSquare board (position ((c+1), (d-1)))) == Empty = validMoveBishop board (a, b) ((c+1), (d-1))
+                                       | a < c && b < d && (onSquare board (position ((c-1), (d-1)))) == Empty = validMoveBishop board (a, b) ((c-1), (d-1))
+                                       | a < c && b > d && (onSquare board (position ((c-1), (d+1)))) == Empty = validMoveBishop board (a, b) ((c-1), (d+1))
+                                       | otherwise = False
 
 {- validMoveQueen board (a, b) (c, d)
    Checks whether it is a valid to move a Queen from (a, b) to (c, d)

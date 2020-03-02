@@ -72,7 +72,7 @@ printCurrentBoard y = do
             convertPieces (Black Rook) = " ♜ "
             convertPieces (Empty) = " ⬚ "
             convertPieces "hej" = error
-            convertPieces (Green King) = Errir
+            convertPieces (Green King) = Error
 -}
 convertPieces :: Square -> String
 convertPieces (White Rook) = " ♖ "
